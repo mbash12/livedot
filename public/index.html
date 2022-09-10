@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Viewer</title>
+  <meta charset="UTF-8" />
+  <link href="/styles.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./windi.css">
+  <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+
+<body x-data="{panel:true,tab:0}">
+  <button id="enable-audio" class="hidden">Enable audio</button>
+  <div class="fixed w-full h-full top-0 left-0 flex">
+    <div class="flex-1 bg-black relative">
+      <video playsinline autoplay muted class="w-full h-full"></video>
+      <div class="absolute right-0 top-4 h-8 w-8 bg-gray-600 flex items-center justify-center rounded-l cursor-pointer"
+        @click="panel=!panel"></div>
+    </div>
+    <div class="w-92 bg-gray-900 flex flex-col flex-shrink-0" x-show="panel">
+      <div class="h-16 flex items-center gap-4 p-4">
+        <div
+          :class="`flex-1 h-12 flex items-center justify-center rounded-lg text-sm cursor-pointer ${tab==0?'bg-gray-700 text-white ':'text-gray-400'}`"
+          @click="tab=0">
+          Chat</div>
+        <div
+          :class="`flex-1 h-12 flex items-center justify-center rounded-lg text-sm cursor-pointer ${tab==1?'bg-gray-700 text-white ':'text-gray-400'}`"
+          @click="tab=1">
+          Quiz</div>
+      </div>
+      <div class="flex-1"></div>
+    </div>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/watch.js"></script>
+</body>
+
+</html>
