@@ -1,58 +1,109 @@
 const peerConnections = {};
 const config = {
-    iceServers: [
-        {
-            urls: "stun:stun.l.google.com:19302",
-        },
-        // {
-        //   "urls": "turn:TURN_IP?transport=tcp",
-        //   "username": "TURN_USERNAME",
-        //   "credential": "TURN_CREDENTIALS"
-        // }
-    ],
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302",
+    },
+    // {
+    //   "urls": "turn:TURN_IP?transport=tcp",
+    //   "username": "TURN_USERNAME",
+    //   "credential": "TURN_CREDENTIALS"
+    // }
+  ],
 };
+
+let watchers = [];
 
 const socket = io.connect(window.location.origin);
 
 socket.on("answer", (id, description) => {
-    peerConnections[id].setRemoteDescription(description);
+  peerConnections[id].setRemoteDescription(description);
+});
+
+socket.on("watchers", (data) => {
+  watchers = data;
+  let att = document.querySelector("#attendance");
+  att.innerHTML = "";
+  document.querySelector("#atcount").innerHTML = `(${watchers.length})`;
+  watchers.forEach((e) => {
+    let l = document.createElement("div");
+    l.className = "p-4 text-white border-b border-gray-700";
+    l.innerHTML = e.username;
+    att.append(l);
+  });
+});
+
+socket.on("chat", function (msg) {
+  msg = JSON.parse(msg);
+  console.log(msg);
+  let chat = document.querySelector("#messages");
+  var item = document.createElement("div");
+  item.className = "w-full pt-6";
+  item.innerHTML = `
+    <div class="text-white mb-2 text-sm opacity-60 ${msg.username}">
+    ${msg.username}
+    </div>
+    <div
+    class="p-2 bg-gray-700 text-white rounded-xl rounded-tl-none flex flex-col max-w-9/10"
+    >
+    ${msg.message}
+    <span class="text-sm text-gray-400 block ml-auto mt-1"
+        >${msg.time}</span
+    >
+    </div>
+  `;
+  chat.appendChild(item);
+  let mw = document.querySelector("#messages-wrapper");
+  mw.scrollTop = mw.scrollHeight;
+});
+
+document.querySelector("#message").addEventListener("submit", (e) => {
+  e.preventDefault();
+  let t = document.querySelector("#msgtext");
+  socket.emit(
+    "chat",
+    JSON.stringify({
+      username: "Broadcaster",
+      message: t.value,
+      time: new Date(),
+    })
+  );
+  t.value = "";
 });
 
 socket.on("watcher", (id) => {
-    const peerConnection = new RTCPeerConnection(config);
-    peerConnections[id] = peerConnection;
+  const peerConnection = new RTCPeerConnection(config);
+  peerConnections[id] = peerConnection;
 
-    // let stream = videoElement.srcObject;
-    const stream = sceneElement.captureStream(25);
-    stream
-        .getTracks()
-        .forEach((track) => peerConnection.addTrack(track, stream));
+  // let stream = videoElement.srcObject;
+  const stream = sceneElement.captureStream(25);
+  stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
 
-    peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-            socket.emit("candidate", id, event.candidate);
-        }
-    };
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("candidate", id, event.candidate);
+    }
+  };
 
-    peerConnection
-        .createOffer()
-        .then((sdp) => peerConnection.setLocalDescription(sdp))
-        .then(() => {
-            socket.emit("offer", id, peerConnection.localDescription);
-        });
+  peerConnection
+    .createOffer()
+    .then((sdp) => peerConnection.setLocalDescription(sdp))
+    .then(() => {
+      socket.emit("offer", id, peerConnection.localDescription);
+    });
 });
 
 socket.on("candidate", (id, candidate) => {
-    peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
+  peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
 });
 
 socket.on("disconnectPeer", (id) => {
-    peerConnections[id].close();
-    delete peerConnections[id];
+  peerConnections[id].close();
+  delete peerConnections[id];
 });
 
 window.onunload = window.onbeforeunload = () => {
-    socket.close();
+  socket.close();
 };
 
 let scene = 0;
@@ -70,44 +121,42 @@ let bg = 0;
 let img = new Image();
 let tool = 0;
 var flag = false,
-    prevX = 0,
-    currX = 0,
-    prevY = 0,
-    currY = 0,
-    w,
-    h,
-    dot_flag = false;
+  prevX = 0,
+  currX = 0,
+  prevY = 0,
+  currY = 0,
+  w,
+  h,
+  dot_flag = false;
 
 var x = "black",
-    y = 2;
+  y = 2;
 
 var displayMediaOptions = {
-    video: {
-        cursor: "always",
-        height: 720,
-        width: 1280,
-    },
-    audio: false,
+  video: {
+    cursor: "always",
+    height: 720,
+    width: 1280,
+  },
+  audio: false,
 };
 
 async function startCapture() {
-    try {
-        videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(
-            displayMediaOptions
-        );
-        bg = 2;
-    } catch (err) {
-        console.error("Error: " + err);
-    }
+  try {
+    videoElem.srcObject = await navigator.mediaDevices.getDisplayMedia(
+      displayMediaOptions
+    );
+    bg = 2;
+  } catch (err) {
+    console.error("Error: " + err);
+  }
 }
 function stopCapture(evt) {
-	try {
-		let tracks = videoElem.srcObject.getTracks();
-		tracks.forEach((track) => track.stop());
-		videoElem.srcObject = null;
-	} catch (error) {
-		
-	}
+  try {
+    let tracks = videoElem.srcObject.getTracks();
+    tracks.forEach((track) => track.stop());
+    videoElem.srcObject = null;
+  } catch (error) {}
 }
 
 audioSelect.onchange = getStream;
@@ -116,269 +165,267 @@ videoSelect.onchange = getStream;
 getStream().then(getDevices).then(gotDevices);
 
 function getDevices() {
-    return navigator.mediaDevices.enumerateDevices();
+  return navigator.mediaDevices.enumerateDevices();
 }
 
 function gotDevices(deviceInfos) {
-    window.deviceInfos = deviceInfos;
-    for (const deviceInfo of deviceInfos) {
-        const option = document.createElement("option");
-        option.value = deviceInfo.deviceId;
-        if (deviceInfo.kind === "audioinput") {
-            option.text =
-                deviceInfo.label || `Microphone ${audioSelect.length + 1}`;
-            audioSelect.appendChild(option);
-        } else if (deviceInfo.kind === "videoinput") {
-            option.text =
-                deviceInfo.label || `Camera ${videoSelect.length + 1}`;
-            videoSelect.appendChild(option);
-        }
+  window.deviceInfos = deviceInfos;
+  for (const deviceInfo of deviceInfos) {
+    const option = document.createElement("option");
+    option.value = deviceInfo.deviceId;
+    if (deviceInfo.kind === "audioinput") {
+      option.text = deviceInfo.label || `Microphone ${audioSelect.length + 1}`;
+      audioSelect.appendChild(option);
+    } else if (deviceInfo.kind === "videoinput") {
+      option.text = deviceInfo.label || `Camera ${videoSelect.length + 1}`;
+      videoSelect.appendChild(option);
     }
+  }
 }
 
 function getStream() {
-    if (window.stream) {
-        window.stream.getTracks().forEach((track) => {
-            track.stop();
-        });
-    }
-    const audioSource = audioSelect.value;
-    const videoSource = videoSelect.value;
-    const constraints = {
-        audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
-        video: { deviceId: videoSource ? { exact: videoSource } : undefined },
-    };
-    return navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then(gotStream)
-        .catch(handleError);
+  if (window.stream) {
+    window.stream.getTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+  const audioSource = audioSelect.value;
+  const videoSource = videoSelect.value;
+  const constraints = {
+    audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
+    video: { deviceId: videoSource ? { exact: videoSource } : undefined },
+  };
+  return navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then(gotStream)
+    .catch(handleError);
 }
 
 function gotStream(stream) {
-    window.stream = stream;
-    audioSelect.selectedIndex = [...audioSelect.options].findIndex(
-        (option) => option.text === stream.getAudioTracks()[0].label
-    );
-    videoSelect.selectedIndex = [...videoSelect.options].findIndex(
-        (option) => option.text === stream.getVideoTracks()[0].label
-    );
-    videoElement.srcObject = stream;
-    socket.emit("broadcaster");
+  window.stream = stream;
+  audioSelect.selectedIndex = [...audioSelect.options].findIndex(
+    (option) => option.text === stream.getAudioTracks()[0].label
+  );
+  videoSelect.selectedIndex = [...videoSelect.options].findIndex(
+    (option) => option.text === stream.getVideoTracks()[0].label
+  );
+  videoElement.srcObject = stream;
+  socket.emit("broadcaster");
 }
 
 function handleError(error) {
-    console.error("Error: ", error);
+  console.error("Error: ", error);
 }
 
 const init = () => {
-    (function loop() {
-		sctx.fillStyle = "white";
-		sctx.fillRect(0, 0, boardElement.width, boardElement.height);
-        if (bg == 1) {
-            sctx.drawImage(img, 0, 0);
-        }
-        if (bg == 2) {
-            sctx.drawImage(videoElem, 0, 0);
-        }
-        if (scene == 0) {
-            sctx.drawImage(boardElement, 0, 0);
-            sctx.drawImage(
-                videoElement,
-                (videoElement.videoWidth - 720) / 2,
-                0,
-                720,
-                720,
-                1080,
-                520,
-                200,
-                200
-            );
-        }
-        if (scene == 1) {
-            sctx.fillStyle = "black";
-            sctx.fillRect(0, 0, boardElement.width, boardElement.height);
-            sctx.drawImage(
-                videoElement,
-                (1280 - videoElement.videoWidth) / 2,
-                0,
-                videoElement.videoWidth,
-                720
-            );
-        }
-        if (scene == 2) {
-            sctx.drawImage(boardElement, 0, 0);
-        }
-        setTimeout(loop, 1000 / 25);
-    })();
-    w = boardElement.width;
-    h = boardElement.height;
+  (function loop() {
+    sctx.fillStyle = "white";
+    sctx.fillRect(0, 0, boardElement.width, boardElement.height);
+    if (bg == 1) {
+      sctx.drawImage(img, 0, 0);
+    }
+    if (bg == 2) {
+      sctx.drawImage(videoElem, 0, 0);
+    }
+    if (scene == 0) {
+      sctx.drawImage(boardElement, 0, 0);
+      sctx.drawImage(
+        videoElement,
+        (videoElement.videoWidth - 480) / 2,
+        0,
+        480,
+        480,
+        1080,
+        520,
+        200,
+        200
+      );
+    }
+    if (scene == 1) {
+      sctx.fillStyle = "black";
+      sctx.fillRect(0, 0, boardElement.width, boardElement.height);
+      sctx.drawImage(
+        videoElement,
+        (1280 - videoElement.videoWidth) / 2,
+        0,
+        videoElement.videoWidth,
+        720
+      );
+    }
+    if (scene == 2) {
+      sctx.drawImage(boardElement, 0, 0);
+    }
+    setTimeout(loop, 1000 / 25);
+  })();
+  w = boardElement.width;
+  h = boardElement.height;
 
-    boardElement.addEventListener(
-        "mousemove",
-        function (e) {
-            findxy("move", e);
-        },
-        false
-    );
-    boardElement.addEventListener(
-        "mousedown",
-        function (e) {
-            findxy("down", e);
-        },
-        false
-    );
-    boardElement.addEventListener(
-        "mouseup",
-        function (e) {
-            findxy("up", e);
-        },
-        false
-    );
-    boardElement.addEventListener(
-        "mouseout",
-        function (e) {
-            findxy("out", e);
-        },
-        false
-    );
-    backgroundElement.addEventListener("change", (e) => {
-		if(e.target.files[0]){
-			stopCapture();
-			img.src = URL.createObjectURL(e.target.files[0]);
-			bg = 1;
-			e.target.value = ""
-		}
+  boardElement.addEventListener(
+    "mousemove",
+    function (e) {
+      findxy("move", e);
+    },
+    false
+  );
+  boardElement.addEventListener(
+    "mousedown",
+    function (e) {
+      findxy("down", e);
+    },
+    false
+  );
+  boardElement.addEventListener(
+    "mouseup",
+    function (e) {
+      findxy("up", e);
+    },
+    false
+  );
+  boardElement.addEventListener(
+    "mouseout",
+    function (e) {
+      findxy("out", e);
+    },
+    false
+  );
+  backgroundElement.addEventListener("change", (e) => {
+    if (e.target.files[0]) {
+      stopCapture();
+      img.src = URL.createObjectURL(e.target.files[0]);
+      bg = 1;
+      e.target.value = "";
+    }
+  });
+
+  setTimeout(() => {
+    const scenes = document.querySelector("#sceneLayout");
+    scenes.addEventListener("change", () => {
+      scene = scenes.value;
+      sctx.fillStyle = "white";
+      sctx.fillRect(0, 0, boardElement.width, boardElement.height);
     });
-
-    setTimeout(() => {
-        const scenes = document.querySelector("#sceneLayout");
-        scenes.addEventListener("change", () => {
-            scene = scenes.value;
-            sctx.fillStyle = "white";
-            sctx.fillRect(0, 0, boardElement.width, boardElement.height);
-        });
-        const tools = [...document.querySelectorAll(".tool")];
-        tools.forEach((e) => {
-            e.addEventListener("click", () => {
-                if (!["3", "4", "5"].includes(e.dataset.tool)) {
-                    tool = e.dataset.tool;
-                } else {
-                    if (e.dataset.tool == 3) {
-                        erase();
-                    }
-                }
-            });
-        });
-        const bgs = [...document.querySelectorAll(".bg")];
-        bgs.forEach((e) => {
-            e.addEventListener("click", () => {
-                if (e.dataset.bg == 0) {
-                    stopCapture();
-                    bg = 0;
-                }
-                if (e.dataset.bg == 1) {
-                    backgroundElement.click();
-                }
-                if (e.dataset.bg == 2) {
-                    startCapture();
-                }
-            });
-        });
-    }, 500);
+    const tools = [...document.querySelectorAll(".tool")];
+    tools.forEach((e) => {
+      e.addEventListener("click", () => {
+        if (!["3", "4", "5"].includes(e.dataset.tool)) {
+          tool = e.dataset.tool;
+        } else {
+          if (e.dataset.tool == 3) {
+            erase();
+          }
+        }
+      });
+    });
+    const bgs = [...document.querySelectorAll(".bg")];
+    bgs.forEach((e) => {
+      e.addEventListener("click", () => {
+        if (e.dataset.bg == 0) {
+          stopCapture();
+          bg = 0;
+        }
+        if (e.dataset.bg == 1) {
+          backgroundElement.click();
+        }
+        if (e.dataset.bg == 2) {
+          startCapture();
+        }
+      });
+    });
+  }, 500);
 };
 
 function color(obj) {
-    switch (obj.id) {
-        case "green":
-            x = "green";
-            break;
-        case "blue":
-            x = "blue";
-            break;
-        case "red":
-            x = "red";
-            break;
-        case "yellow":
-            x = "yellow";
-            break;
-        case "orange":
-            x = "orange";
-            break;
-        case "black":
-            x = "black";
-            break;
-        case "white":
-            x = "white";
-            break;
-    }
-    if (x == "white") y = 14;
-    else y = 2;
+  switch (obj.id) {
+    case "green":
+      x = "green";
+      break;
+    case "blue":
+      x = "blue";
+      break;
+    case "red":
+      x = "red";
+      break;
+    case "yellow":
+      x = "yellow";
+      break;
+    case "orange":
+      x = "orange";
+      break;
+    case "black":
+      x = "black";
+      break;
+    case "white":
+      x = "white";
+      break;
+  }
+  if (x == "white") y = 14;
+  else y = 2;
 }
 
 function draw(e) {
-    if (tool == 1) {
-        bctx.globalCompositeOperation = "source-over";
-        bctx.beginPath();
-        bctx.moveTo(prevX, prevY);
-        bctx.lineTo(currX, currY);
-        bctx.strokeStyle = x;
-        bctx.lineWidth = y;
-        bctx.stroke();
-        bctx.closePath();
-    }
-    if (tool == 2) {
-        bctx.globalCompositeOperation = "destination-out";
-        bctx.beginPath();
-        bctx.moveTo(prevX, prevY);
-        bctx.lineTo(currX, currY);
-        bctx.strokeStyle = "#FFFFFF";
-        bctx.lineWidth = 20;
-        bctx.stroke();
-        bctx.closePath();
-    }
+  if (tool == 1) {
+    bctx.globalCompositeOperation = "source-over";
+    bctx.beginPath();
+    bctx.moveTo(prevX, prevY);
+    bctx.lineTo(currX, currY);
+    bctx.strokeStyle = x;
+    bctx.lineWidth = y;
+    bctx.stroke();
+    bctx.closePath();
+  }
+  if (tool == 2) {
+    bctx.globalCompositeOperation = "destination-out";
+    bctx.beginPath();
+    bctx.moveTo(prevX, prevY);
+    bctx.lineTo(currX, currY);
+    bctx.strokeStyle = "#FFFFFF";
+    bctx.lineWidth = 20;
+    bctx.stroke();
+    bctx.closePath();
+  }
 }
 
 function erase() {
-    var m = confirm("Want to clear");
-    if (m) {
-        bctx.clearRect(0, 0, w, h);
-    }
+  var m = confirm("Want to clear");
+  if (m) {
+    bctx.clearRect(0, 0, w, h);
+  }
 }
 
 function findxy(res, e) {
-    var rect = boardElement.getBoundingClientRect();
-    if (res == "down") {
-        prevX = currX;
-        prevY = currY;
-        currX = e.clientX - rect.left;
-        currY = e.clientY - rect.top;
+  var rect = boardElement.getBoundingClientRect();
+  if (res == "down") {
+    prevX = currX;
+    prevY = currY;
+    currX = e.clientX - rect.left;
+    currY = e.clientY - rect.top;
 
-        flag = true;
-        dot_flag = true;
-        if (dot_flag) {
-            if (tool == 1) {
-                bctx.beginPath();
-                bctx.fillStyle = x;
-                bctx.fillRect(currX, currY, 2, 2);
-                bctx.closePath();
-                dot_flag = false;
-            }
-            if (tool == 2) {
-                dot_flag = false;
-            }
-        }
+    flag = true;
+    dot_flag = true;
+    if (dot_flag) {
+      if (tool == 1) {
+        bctx.beginPath();
+        bctx.fillStyle = x;
+        bctx.fillRect(currX, currY, 2, 2);
+        bctx.closePath();
+        dot_flag = false;
+      }
+      if (tool == 2) {
+        dot_flag = false;
+      }
     }
-    if (res == "up" || res == "out") {
-        flag = false;
+  }
+  if (res == "up" || res == "out") {
+    flag = false;
+  }
+  if (res == "move") {
+    if (flag) {
+      prevX = currX;
+      prevY = currY;
+      currX = e.clientX - rect.left;
+      currY = e.clientY - rect.top;
+      draw(e);
     }
-    if (res == "move") {
-        if (flag) {
-            prevX = currX;
-            prevY = currY;
-            currX = e.clientX - rect.left;
-            currY = e.clientY - rect.top;
-            draw(e);
-        }
-    }
+  }
 }
 init();

@@ -1,90 +1,205 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <title>Broadcaster</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="./windi.css" />
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
+    <style>
+      .Broadcaster{
+        color: red;
+        font-weight: bold  !important;
+        font-size: 16px !important;
+        opacity: 1 !important;
+      }
+    </style>
+  </head>
 
-<head>
-  <title>Broadcaster</title>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="./windi.css">
-  <script src="//unpkg.com/alpinejs" defer></script>
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
-</head>
+  <body x-data="{panel:true,tab:0,scene:0,tool:0,bg:0}">
+    <div class="fixed top-0 left-0 w-full h-full flex">
+      <div class="flex-1 bg-black flex flex-col">
+        <div class="h-20 w-full flex items-center bg-gray-800 px-2">
+          <section class="flex flex-col px-2">
+            <label for="audioSource" class="text-sm text-gray-400"
+              >Audio source:
+            </label>
+            <select
+              id="audioSource"
+              class="bg-gray-600 text-white rounded text-sm p-2"
+            ></select>
+          </section>
+          <section class="flex flex-col px-2">
+            <label for="videoSource" class="text-sm text-gray-400"
+              >Video source:
+            </label>
+            <select
+              id="videoSource"
+              class="bg-gray-600 text-white rounded text-sm p-2"
+            ></select>
+          </section>
+          <section class="flex flex-col px-2">
+            <label for="sceneLayout" class="text-sm text-gray-400"
+              >Scene layout:
+            </label>
+            <select
+              id="sceneLayout"
+              class="bg-gray-600 text-white rounded text-sm p-2"
+            >
+              <option value="0">Picture in picture</option>
+              <option value="1">Webcam only only</option>
+              <option value="2">Background only</option>
+            </select>
+          </section>
 
-<body x-data="{panel:false,tab:0,scene:0,tool:0,bg:0}">
-  <div class="fixed top-0 left-0 w-full h-full  flex">
-    <div class="flex-1 bg-black flex flex-col">
-      <div class="h-20 w-full flex items-center bg-gray-800 px-2">
-        <section class="flex flex-col px-2">
-          <label for="audioSource" class="text-sm text-gray-400">Audio source: </label>
-          <select id="audioSource" class="bg-gray-600 text-white rounded text-sm p-2"></select>
-        </section>
-        <section class="flex flex-col px-2">
-          <label for="videoSource" class="text-sm text-gray-400">Video source: </label>
-          <select id="videoSource" class="bg-gray-600 text-white rounded text-sm p-2"></select>
-        </section>
-        <section class="flex flex-col px-2">
-          <label for="sceneLayout" class="text-sm text-gray-400">Scene layout: </label>
-          <select id="sceneLayout" class="bg-gray-600 text-white rounded text-sm p-2">
-            <option value="0">Picture in picture</option>
-            <option value="1">Webcam only only</option>
-            <option value="2">Background only</option>
-          </select>
-        </section>
+          <section class="flex flex-col px-2">
+            <label class="text-sm text-gray-400">Drawing tool: </label>
+            <div class="flex border border-gray-600 rounded overflow-hidden">
+              <input type="file" id="imgupload" style="display: none" />
+              <button
+                :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==0?'bg-blue-500 ':''}`"
+                data-tool="0"
+                @click="tool=0"
+              >
+                <i class="ri-cursor-line"></i>
+              </button>
+              <button
+                :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==1?'bg-blue-500 ':''}`"
+                data-tool="1"
+                @click="tool=1"
+              >
+                <i class="ri-pencil-line"></i>
+              </button>
+              <button
+                :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==2?'bg-blue-500 ':''}`"
+                data-tool="2"
+                @click="tool=2"
+              >
+                <i class="ri-eraser-line"></i>
+              </button>
+              <button
+                :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==3?'bg-blue-500 ':''}`"
+                data-tool="3"
+              >
+                <i class="ri-brush-4-line"></i>
+              </button>
+            </div>
+          </section>
 
-        <section class="flex flex-col px-2">
-          <label class="text-sm text-gray-400">Drawing tool: </label>
-          <div class="flex border border-gray-600 rounded overflow-hidden">
-            <input type="file" id="imgupload" style="display:none" />
-            <button :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==0?'bg-blue-500 ':''}`" data-tool="0"
-              @click="tool=0"><i class="ri-cursor-line"></i></button>
-            <button :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==1?'bg-blue-500 ':''}`" data-tool="1"
-              @click="tool=1"><i class="ri-pencil-line"></i></button>
-            <button :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==2?'bg-blue-500 ':''}`" data-tool="2"
-              @click="tool=2"><i class="ri-eraser-line"></i></button>
-            <button :class="`tool px-4 py-2 text-sm flex-1 text-white ${tool==3?'bg-blue-500 ':''}`" data-tool="3"><i
-                class="ri-brush-4-line"></i></button>
-          </div>
-        </section>
-
-        <section class="flex flex-col px-2">
-          <label class="text-sm text-gray-400">Background: </label>
-          <div class="flex border border-gray-600 rounded overflow-hidden">
-            <button :class="`bg px-4 py-2 text-sm flex-1 text-white`" data-bg="0"><i class="ri-checkbox-blank-line"></i></button>
-            <button :class="`bg px-4 py-2 text-sm flex-1 text-white`" data-bg="1"><i class="ri-image-line"></i></button>
-            <button :class="`bg px-4 py-2 text-sm flex-1 text-white`" data-bg="2"><i class="ri-slideshow-3-line"></i></button>
-          </div>
-        </section>
-      </div>
-      <div class="flex-1 flex items-center justify-center relative">
-        <div class="w-[1280px] h-[720px] border border-red-500 flex overflow-hidden relative">
-          <video playsinline autoplay muted class="w-full h-full absolute top-0 left-0  opacity-0" width="1280"
-            height="720"></video>
-          <video playsinline autoplay muted class="w-full h-full absolute top-0 left-0 opacity-0" width="1280"
-            height="720" id="video1"></video>
-          <canvas id="scene" class="w-full h-full absolute top-0 left-0" width="1280" height="720"></canvas>
-          <canvas id="board" class="w-full h-full absolute top-0 left-0 opacity-0" width="1280" height="720"></canvas>
+          <section class="flex flex-col px-2">
+            <label class="text-sm text-gray-400">Background: </label>
+            <div class="flex border border-gray-600 rounded overflow-hidden">
+              <button
+                :class="`bg px-4 py-2 text-sm flex-1 text-white`"
+                data-bg="0"
+              >
+                <i class="ri-checkbox-blank-line"></i>
+              </button>
+              <button
+                :class="`bg px-4 py-2 text-sm flex-1 text-white`"
+                data-bg="1"
+              >
+                <i class="ri-image-line"></i>
+              </button>
+              <button
+                :class="`bg px-4 py-2 text-sm flex-1 text-white`"
+                data-bg="2"
+              >
+                <i class="ri-slideshow-3-line"></i>
+              </button>
+            </div>
+          </section>
         </div>
         <div
-          class="absolute right-0 top-4 h-8 w-8 bg-gray-600 flex items-center justify-center rounded-l cursor-pointer"
-          @click="panel=!panel"></div>
+          class="flex-1 flex items-center justify-center relative overflow-hidden"
+        >
+          <div
+            class="w-[1280px] h-[720px] border border-red-500 flex overflow-hidden relative"
+          >
+            <video
+              playsinline
+              autoplay
+              muted
+              class="w-full h-full absolute top-0 left-0 opacity-0"
+              width="1280"
+              height="720"
+            ></video>
+            <video
+              playsinline
+              autoplay
+              muted
+              class="w-full h-full absolute top-0 left-0 opacity-0"
+              width="1280"
+              height="720"
+              id="video1"
+            ></video>
+            <canvas
+              id="scene"
+              class="w-full h-full absolute top-0 left-0"
+              width="1280"
+              height="720"
+            ></canvas>
+            <canvas
+              id="board"
+              class="w-full h-full absolute top-0 left-0 opacity-0"
+              width="1280"
+              height="720"
+            ></canvas>
+          </div>
+          <div
+            class="absolute right-0 top-4 h-8 w-8 bg-gray-600 flex items-center justify-center rounded-l cursor-pointer"
+            @click="panel=!panel"
+          ></div>
+        </div>
+        <!-- <div class="h-20 w-full bg-gray-800"></div> -->
       </div>
-      <!-- <div class="h-20 w-full bg-gray-800"></div> -->
-    </div>
-    <div class="w-92 bg-gray-900 flex flex-col flex-shrink-0" x-show="panel">
-      <div class="h-16 flex items-center gap-4 p-4">
-        <div
-          :class="`flex-1 h-12 flex items-center justify-center rounded-lg text-sm cursor-pointer ${tab==0?'bg-gray-700 text-white ':'text-gray-400'}`"
-          @click="tab=0">
-          Chat</div>
-        <div
-          :class="`flex-1 h-12 flex items-center justify-center rounded-lg text-sm cursor-pointer ${tab==1?'bg-gray-700 text-white ':'text-gray-400'}`"
-          @click="tab=1">
-          Attendance</div>
-      </div>
-      <div class="flex-1"></div>
-    </div>
-  </div>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/broadcast.js"></script>
-</body>
+      <div class="w-92 bg-gray-900 flex flex-col flex-shrink-0" x-show="panel">
+        <div class="h-16 flex items-center gap-4 p-4">
+          <div
+            :class="`flex-1 h-12 flex items-center justify-center rounded-lg text-sm cursor-pointer ${tab==0?'bg-gray-700 text-white ':'text-gray-400'}`"
+            @click="tab=0"
+          >
+            Chat
+          </div>
+          <div
+            :class="`flex-1 h-12 flex items-center justify-center rounded-lg text-sm cursor-pointer ${tab==1?'bg-gray-700 text-white ':'text-gray-400'}`"
+            @click="tab=1"
+          >
+            Attendance <span id="atcount"></span>
+          </div>
+        </div>
+        <div class="flex-1 flex min-h-0">
+          <div id="chat" class="flex-1 flex flex-col min-h-0" x-show="tab==0">
+            <div class="flex-1 overflow-auto w-full px-4 min-h-0" id="messages-wrapper">
+              <div
+                class="min-h-full w-full flex flex-col justify-end"
+                id="messages"
+              ></div>
+            </div>
 
+            <form class="flex flex-shrink-0 p-4" id="message">
+              <input type="text" class="bg-white p-2 flex-1" id="msgtext" required />
+              <button
+                type="submit"
+                class="p-2 text-white flex-shrink-0 flex items-center justify-center ml-2 bg-blue-500"
+              >
+                Send
+              </button>
+            </form>
+          </div>
+          <div
+            id="attendance"
+            class="h-full w-full overflow-auto"
+            x-show="tab==1"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <div class="hidden p-4 text-white border-b border-gray-700"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/broadcast.js"></script>
+  </body>
 </html>
